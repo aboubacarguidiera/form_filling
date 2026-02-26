@@ -1,24 +1,27 @@
-import ollama
-import json 
+import pypdf
+# remplir un pdf interactif (acroform) avec les données extraites et parsées
+from pypdf.generic import NameObject, create_string_object
+from reportlab.pdfgen import canvas     
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-def fill_template(parsed_data, document_path):
-    # This is a placeholder function. You would need to use a library like ReportLab or PyPDF2 to fill in the PDF template with the parsed data.
-    # For example, you could use ReportLab to create a new PDF and write the parsed data into it.
-
-    prompt = f"""Fill in the following PDF template with the provided structured data. 
-The structured data is in JSON format and contains the following fields: name, email, skills.
-There might be some fields that are not exactly matching the template, so you should do your best to fill in the relevant information in the PDF.
-Structured data:
-{json.dumps(parsed_data, indent=2)}
-PDF template path: {document_path}
-"""
+def fill_acroform(parsed_data: dict, form_path: str, output_path: str):
+    reader = pypdf.PdfReader(form_path)
+    writer = pypdf.PdfWriter()
+    writer.append(reader)
     
+    writer.update_page_form_field_values(
+        writer.pages[0], 
+        {k: str(v) for k, v in parsed_data.items() if v is not None}
+    )
+    with open(output_path, "wb") as f:
+        writer.write(f)
 
-    
+# remplir un pdf scanné (non interactif) en créant une nouvelle page avec les données extraites
 
-    c = canvas.Canvas(document_path.replace(".pdf", "_filled.pdf"), pagesize=letter)
-    c.drawString(100, 750, f"Name: {parsed_data.get('name', '')}")
-    c.drawString(100, 730, f"Email: {parsed_data.get('email', '')}")
-    c.drawString(100, 710, f"Skills: {', '.join(parsed_data.get('skills', []))}")
+def fill_scanned_form(parsed_data: dict, form_path: str, output_path: str):
+    c = canvas.Canvas(output_path, pagesize=letter)
+    c.drawString(100, 750, "Formulaire rempli automatiquement")
+    y = 700
+    for field, value in parsed_data.items():
+        c.drawString(100, y, f"{field}: {value}")
+        y -= 30
     c.save()

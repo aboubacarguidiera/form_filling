@@ -30,6 +30,8 @@ def extract_text_from_image(path: str) -> str:
     text = pytesseract.image_to_string(img, lang="eng+fra")
     return text 
 
+
+
 # POUR Afficher l'image 
 def display_im(path:str)->str:
     img = Image.open(path)
