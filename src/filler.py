@@ -1,4 +1,6 @@
 import io
+import re
+import unicodedata
 
 import pypdf
 # remplir un pdf interactif (acroform) avec les données extraites et parsées
@@ -24,10 +26,22 @@ def fill_acroform(parsed_data: dict, form_path: str, output_path: str):
 # remplir un pdf scanné (non interactif) en superposant les valeurs sur le PDF source,
 # aux positions détectées par OCR (voir locate_form_fields)
 
+def _normalize_field_key(key: str) -> str:
+    # Le LLM ne restitue pas toujours une clé de champ à l'identique (ex. il
+    # corrige silencieusement un label OCR mal reconnu comme "Né(e} le" en
+    # "Né(e) le"). On normalise donc en ignorant casse, accents composés et
+    # ponctuation pour retenter une correspondance avant d'abandonner.
+    key = unicodedata.normalize("NFKC", key).lower()
+    key = re.sub(r"[^\w\s]", "", key, flags=re.UNICODE)
+    return re.sub(r"\s+", " ", key, flags=re.UNICODE).strip()
+
+
 def fill_scanned_form(parsed_data: dict, form_path: str, output_path: str):
     positions_by_page: dict[int, list[dict]] = {}
     for pos in locate_form_fields(form_path):
         positions_by_page.setdefault(pos["page"], []).append(pos)
+
+    normalized_lookup = {_normalize_field_key(k): v for k, v in parsed_data.items()}
 
     reader = pypdf.PdfReader(form_path)
     writer = pypdf.PdfWriter()
@@ -36,7 +50,10 @@ def fill_scanned_form(parsed_data: dict, form_path: str, output_path: str):
         buf = io.BytesIO()
         c = canvas.Canvas(buf, pagesize=(float(page.mediabox.width), float(page.mediabox.height)))
         for pos in positions_by_page.get(page_index, []):
-            value = parsed_data.get(pos["field"])
+            field = pos["field"]
+            value = parsed_data.get(field)
+            if value is None:
+                value = normalized_lookup.get(_normalize_field_key(field))
             if value is not None:
                 c.drawString(pos["x"], pos["y"], str(value))
         c.save()

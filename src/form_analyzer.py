@@ -52,6 +52,10 @@ def _extract_label_anchor(line_words: list[dict], max_label_len: int = 30):
     return label, anchor_word
 
 
+LABEL_VALUE_GAP_PT = 5  # espace visuel label -> valeur, en points PDF (indépendant du dpi)
+LABEL_VALUE_Y_LIFT_PT = 3  # décale la valeur au-dessus du trait imprimé, au lieu d'écrire dessus
+
+
 def locate_form_fields(form_path: str, dpi: int = 300) -> list[dict]:
     # Détecte par OCR les champs d'un formulaire scanné (non-AcroForm) et
     # renvoie leur position en points PDF, pour superposer les valeurs
@@ -69,7 +73,7 @@ def locate_form_fields(form_path: str, dpi: int = 300) -> list[dict]:
                 if extracted is None:
                     continue
                 label, anchor = extracted
-                x_pt = (anchor["left"] + anchor["width"] + 5) * scale
-                y_pt = page.height - (anchor["top"] + anchor["height"]) * scale
+                x_pt = (anchor["left"] + anchor["width"]) * scale + LABEL_VALUE_GAP_PT
+                y_pt = page.height - (anchor["top"] + anchor["height"]) * scale + LABEL_VALUE_Y_LIFT_PT
                 results.append({"field": label, "page": page_index, "x": x_pt, "y": y_pt})
     return results

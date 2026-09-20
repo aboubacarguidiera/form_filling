@@ -88,3 +88,23 @@ def test_fill_scanned_form_end_to_end_real_ocr(scanned_form_pdf, tmp_path):
         text = pdf.pages[0].extract_text()
     assert "Dupont" in text
     assert "2024-01-01" in text
+
+
+def test_fill_scanned_form_matches_value_despite_key_mismatch(
+    monkeypatch, scanned_form_pdf, tmp_path
+):
+    # Le LLM peut renvoyer une clé légèrement différente du label OCR d'origine
+    # (ex. il corrige "Né(e} le" -- accolade mal reconnue par l'OCR -- en
+    # "Né(e) le"). La correspondance normalisée doit quand même retrouver la
+    # valeur au lieu de la perdre silencieusement.
+    monkeypatch.setattr(
+        "src.filler.locate_form_fields",
+        lambda form_path: [{"field": "Né(e} le", "page": 0, "x": 150, "y": 700}],
+    )
+    output_path = str(tmp_path / "output.pdf")
+
+    fill_scanned_form({"Né(e) le": "03/11/1985"}, scanned_form_pdf, output_path)
+
+    with pdfplumber.open(output_path) as pdf:
+        text = pdf.pages[0].extract_text()
+    assert "03/11/1985" in text

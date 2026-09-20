@@ -38,10 +38,10 @@ def test_locate_form_fields_converts_coordinates(monkeypatch, scanned_form_pdf):
     by_field = {pos["field"]: pos for pos in positions}
     assert set(by_field) == {"Nom", "Date"}
     assert by_field["Nom"]["page"] == 0
-    assert by_field["Nom"]["x"] == pytest.approx(87.6)
-    assert by_field["Nom"]["y"] == pytest.approx(702.0)
-    assert by_field["Date"]["x"] == pytest.approx(88.8)
-    assert by_field["Date"]["y"] == pytest.approx(654.0)
+    assert by_field["Nom"]["x"] == pytest.approx(91.4)
+    assert by_field["Nom"]["y"] == pytest.approx(705.0)
+    assert by_field["Date"]["x"] == pytest.approx(92.6)
+    assert by_field["Date"]["y"] == pytest.approx(657.0)
 
 
 def test_locate_form_fields_skips_noise_no_colon_and_long_labels(monkeypatch, scanned_form_pdf):
