@@ -9,9 +9,10 @@ def fill_acroform(parsed_data: dict, form_path: str, output_path: str):
     writer.append(reader)
     
     writer.update_page_form_field_values(
-        writer.pages[0], 
+        None,
         {k: str(v) for k, v in parsed_data.items() if v is not None}
     )
+    writer.set_need_appearances_writer(True)
     with open(output_path, "wb") as f:
         writer.write(f)
 

@@ -10,3 +10,4 @@ reportlab==4.2.5
 ollama==0.3.3
 streamlit==1.41.0
 python-dotenv==1.0.1
+pytest==8.3.3
