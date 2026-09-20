@@ -19,3 +19,15 @@ def multi_page_acroform_pdf(tmp_path):
 
     c.save()
     return str(pdf_path)
+
+
+@pytest.fixture
+def scanned_form_pdf(tmp_path):
+    """Builds a 1-page non-AcroForm PDF with printed labels, standing in for a scanned form."""
+    pdf_path = tmp_path / "scanned_form.pdf"
+    c = canvas.Canvas(str(pdf_path), pagesize=letter)
+    c.setFont("Helvetica", 12)
+    c.drawString(72, 700, "Nom:")
+    c.drawString(72, 650, "Date:")
+    c.save()
+    return str(pdf_path)

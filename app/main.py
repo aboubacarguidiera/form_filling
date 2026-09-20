@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.extractor import extract_text
 from src.parser import parse_document
 from src.filler import fill_acroform, fill_scanned_form
-from src.form_analyzer import get_form_fields, get_form_fields_from_text 
+from src.form_analyzer import get_form_fields, locate_form_fields
 
 MAX_FILE_SIZE_MB = 15
 
@@ -62,7 +62,8 @@ if source and form:
                 use_acroform = True
                 st.success(f"{len(form_fields)} champs AcroForm détectés")
             else:
-                form_fields = get_form_fields_from_text(form_path)  # 🆕 fallback OCR
+                field_positions = locate_form_fields(form_path)  # 🆕 fallback OCR (positions incluses)
+                form_fields = sorted({pos["field"] for pos in field_positions})
                 use_acroform = False
                 st.warning("Pas de champs interactifs — détection par OCR")
 
@@ -85,8 +86,8 @@ if source and form:
                 fill_acroform(structured, form_path, output_path)  # 🔧 form_path, pas source_path
                 st.success("Formulaire rempli ✅")
             else:
-                st.error("Formulaire scanné : positionnement automatique non encore supporté.")
-                st.stop()
+                fill_scanned_form(structured, form_path, output_path)
+                st.success("Formulaire rempli ✅")
 
         # ── ÉTAPE 4 : téléchargement ──────────────────────────────────────
         with open(output_path, "rb") as f:
